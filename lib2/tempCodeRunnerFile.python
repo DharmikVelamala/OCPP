@@ -1,0 +1,19 @@
+
+import keyboard
+while True:
+    if keyboard.is_pressed('u'):
+        keyboard.press('w')
+        keyboard.release('w')
+        print(0)
+    elif keyboard.is_pressed('j'):
+        #keyboard.press_and_release('s')
+        print(1)
+    elif keyboard.is_pressed('k'):
+         #keyboard.press_and_release('d')
+         print(2)
+    elif keyboard.is_pressed('h'):
+        #keyboard.press_and_release('a')
+        print(3)
+    else:
+        print(4)
+        keyboard.release('w')
