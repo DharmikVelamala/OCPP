@@ -49,6 +49,12 @@ class ChargePoint(cp):
         return ocpp_response.ClearedChargingLimit(
         )
 
+    @on("DataTransfer")
+    def on_data_transfer(self,vendor_id, **kwargs):
+        return ocpp_response.DataTransfer(
+            status="Accepted"
+        )
+
     @on("FirmwareStatusNotification")
     def on_firmware_status_notification(self, status, **kwargs):
         return ocpp_response.FirmwareStatusNotification(
@@ -115,6 +121,12 @@ class ChargePoint(cp):
             status="Accepted"
         )
 
+    @on("NotifyEVChargingSchedule")
+    def on_notify_ev_charging_schedule(self,time_base,evse_id,charging_schedule,**kwargs):
+        return ocpp_response.NotifyEVChargingSchedule(
+            status="Accepted"
+        )
+
     @on("NotifyEvent")
     def on_notify_event(self,generated_at,seq_no,event_data,**kwargs):
         return ocpp_response.NotifyEvent(
@@ -130,7 +142,41 @@ class ChargePoint(cp):
         return ocpp_response.NotifyReport(
         )
 
+    @on("PublishFirmwareStatusNotification")
+    def on_publish_firmware_status_notification(self,status,**kwargs):
+        return ocpp_response.PublishFirmwareStatusNotification(
+        )
 
+    @on("ReportChargingProfiles")
+    def on_report_charging_profiles(self,request_id,charging_limit_source,charging_profile,evse_id,**kwargs):
+        return ocpp_response.ReportChargingProfiles(
+        )
+
+    @on("ReservationStatusUpdate")
+    def on_reservation_status_update(self,reservation_id,reservation_update_status):
+        return ocpp_response.ReservationStatusUpdate(
+        )
+
+    @on("SecurityEventNotification")
+    def on_security_event_notification(self,type,timestamp,**kwargs):
+        return ocpp_response.SecurityEventNotification(
+        )
+
+    @on("SignCertificate")
+    def on_sign_certificate(self,csr,**kwargs):
+        return ocpp_response.SignCertificate(
+            status="Accepted"
+        )
+
+    @on("StatusNotification")
+    def on_status_notification(self,timestamp,connector_status,evse_id,connector_id,**kwargs):
+        return ocpp_response.StatusNotification(
+        )
+
+    @on("TransactionEvent")
+    def on_transaction_event(self,event_type,timestamp,trigger_reason,seq_no,transaction_info,**kwargs):
+        return ocpp_response.TransactionEvent(
+        )
 
 
 
@@ -219,6 +265,16 @@ class ChargePoint(cp):
             print("Connected to chargepoint system 'Customer Information'")
         else:
             print("Connected to chargepoint system 'Customer Information',error")
+
+    async def send_data_transfer(self):
+        request = ocpp_request.DataTransfer(
+            vendor_id="This identifies the Vendor specific implementation",
+        )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("Connected to chargepoint system 'Data Transfer'")
+        else:
+            print("Connected to chargepoint system 'Data Transfer',error")
 
     async def send_delete_certificate(self):
         request = ocpp_request.DeleteCertificate(
@@ -316,6 +372,7 @@ class ChargePoint(cp):
         response = await self.call(request) 
         if response.messages_in_queue == True:
             print("Connected to chargepoint system 'Get Transaction Status' ")
+        
 
     async def send_get_variables(self):
         request = ocpp_request.GetVariables(
@@ -355,12 +412,89 @@ class ChargePoint(cp):
         if response.status == "Accepted":
             print("Connected to chargepoint system 'PublishFirmware'")
 
+    async def send_request_start_transaction(self):
+        request = ocpp_request.RequestStartTransaction(
+            id_token={
+                "idToken":"hold hidden id of an RFID tag",
+                "type":"Central"
+                },
+            remote_start_id=7
+        )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("Connected to chargepoint system 'RequestStartTransaction'")
 
+    async def  send_request_stop_transaction(self):
+        request = ocpp_request.RequestStopTransaction(
+            transaction_id = "AB1234"
+        )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("Stop Transaction")
 
+    async def  send_reserve_now(self):
+        request = ocpp_request.ReserveNow(
+            id = 7,
+            expiry_date_time =  datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+            id_token= {
+                "idToken":"rfid1234567890",
+                "type":"Central"
+            }
+        )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("Connected to chargepoint system 'ReserveNow")
 
+    async def send_reset_request(self):
+        request = ocpp_request.Reset(
+            type="Immediate"      
+        )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("Connected to chargepoint reset request")
 
+    async def send_send_local_list(self):
+        request = ocpp_request.SendLocalList(
+        version_number=12,
+        update_type="Differential"
+            )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("connected to charge point on Send Local List Request")
 
+    async def send_set_charging_profile(self):
+        request = ocpp_request.SetChargingProfile(
+        evse_id = 32 ,
+        charging_profile = {
+            "id": 11,
+            "stackLevel" : 9 ,
+            "chargingProfilePurpose" : "ChargingStationMaxProfile",
+            "chargingProfileKind" :"Recurring" ,
+            "chargingSchedule":[{
+                "id": 11,
+                "chargingRateUnit": "A",
+                "chargingSchedulePeriod" :[{
+                    "startPeriod":13,
+                    "limit": 1
+                }]
+            }]
+            }
+            )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("connected to charging point on Set charging profile")
 
+    async def send_set_display_message(self):
+        request = ocpp_request.SetDisplayMessage(
+        message = {"id":12,
+                    "priority": "AlwaysFront",
+                    "message":{
+                                "format":"ASCII",
+                                "content":"Ritika"}}
+            )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("connected to charging point on set display message")
 
     async def send_set_monitoring_base(self):
         request = ocpp_request.SetMonitoringBase(
@@ -370,35 +504,6 @@ class ChargePoint(cp):
         if response.status == "Accepted":
             print("Connected to chargepoint system 'set monitoring base' ")
 
-    async def send_notify_event(self):
-        request = ocpp_request.NotifyEvent(
-            
-            generated_at=(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") + "Z"),
-            seq_no = 0,
-            event_data=[
-                {
-                    "eventId":5,
-                    "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")+"z",
-                    "trigger":"Periodic",
-                    "actualValue":"Dharmik",
-                    "eventNotificationType":"HardWiredNotification",
-                    "component": {"name": "ChargingStation"},
-                    "variable": {"name": "VariableName"}
-                }
-            ]
-            )
-        response = await self.call(request)
-        
-        custom_data = getattr(response, 'custom_data', None)
-        if custom_data and isinstance(custom_data, dict):
-            vendor_id = custom_data.get("vendorId")
-            if vendor_id == "notification received by notify event":
-                print("Connected to chargepoint system 'notify event'")
-            else:
-                print("dharmik")
-        else:
-            print("Error: Response does not contain valid custom_data")
-
     async def send_set_monitoring_level(self):
         request = ocpp_request.SetMonitoringLevel(
             severity = 9
@@ -406,6 +511,21 @@ class ChargePoint(cp):
         response = await self.call(request) 
         if response.status == "Accepted":
             print("Connected to chargepoint system 'set monitoring level' ")
+
+    async def send_set_network_profile(self):
+        request = ocpp_request.SetNetworkProfile(
+            configuration_slot = 24,
+            connection_data = {"ocppVersion" : "OCPP15" ,
+                                "ocppTransport" : "JSON",
+                                "ocppCsmsUrl" : "Ritika" ,
+                                "messageTimeout" : 34,
+                                "securityProfile" : 25 ,
+                                "ocppInterface" : "Wireless0" ,
+            }
+            )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("connected to charging point on set network profile")
 
     async def send_set_variable_monitoring(self):
         request = ocpp_request.SetVariableMonitoring(
@@ -440,6 +560,57 @@ class ChargePoint(cp):
         response = await self.call(request)
         print(response)
 
+    async def send_trigger_message(self):
+        request = ocpp_request.TriggerMessage(
+            requested_message = "BootNotification"
+            )
+        response = await self.call(request)
+        if response.status == "Accepted":
+            print("Trigger message request accepted")
+        else:
+            print("Tigger message request rejected.")
+
+    async def send_unlock_connector(self):
+        request = ocpp_request.UnlockConnector(
+            evse_id = 122,
+            connector_id=3
+            )
+        response = await self.call(request)
+        if response.status == "Unlocked":
+            print("Connector successfully unlocked.")
+        elif response.status == "UnlockFailed":
+            print("Failed to unlock connector.")
+        elif response.status == "OngoingAuthorizedTransaction":
+            print("Unlock failed due to ongoing authorized transaction.")
+        elif response.status == "UnknownConnector":
+            print("Unknown connector.")
+        else:
+            print("Unknown status received:", response.status)
+
+    async def send_unpublish_firmware(self):
+        request = ocpp_request.UnpublishFirmware(
+            checksum="checksum over the entire"
+        )
+        response = await self.call(request)
+        if response.status=="Accepted" :
+            print("UpdateFirmwareRequest")
+
+
+    async def send_update_firmware(self):
+        location = "http://localhost:8000/firmware_update.bin"
+        retrieve_date_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+        retries_1 = 3
+        request = ocpp_request.UpdateFirmware(
+            retries=retries_1,
+            request_id=7,
+            firmware={
+                "location":location,
+                "retrieveDateTime":retrieve_date_time
+            }
+        )
+        response = await self.call(request)
+        if response.status=="DownloadOngoing" :
+            print("UpdateFirmwareRequest")
 
 
 
@@ -479,6 +650,9 @@ async def api_handle(charge_point):
         elif user_input == 9:
             await charge_point.send_customer_information()
             
+        elif user_input == 10:
+            await charge_point.send_data_transfer()
+            
         elif user_input == 11:
             await charge_point.send_delete_certificate()
             
@@ -492,25 +666,25 @@ async def api_handle(charge_point):
             await charge_point.send_get_composite_schedule()
             
         elif user_input == 15:
-            await charge_point.send_get_composite_schedule()
-            
-        elif user_input == 16:
             await charge_point.send_get_installed_certificate_ids()
             
-        elif user_input == 17:
+        elif user_input == 16:
             await charge_point.send_get_local_list_version()
             
-        elif user_input == 18:
+        elif user_input == 17:
             await charge_point.send_get_log()
             
-        elif user_input == 19:
+        elif user_input == 18:
             await charge_point.send_get_monitoring_report()
             
-        elif user_input == 20:
+        elif user_input == 19:
             await charge_point.send_get_report()
             
-        elif user_input == 21:
+        elif user_input == 20:
             await charge_point.send_get_transaction_status()
+            
+        elif user_input == 21:
+            await charge_point.send_get_variables()
             
         elif user_input == 22:
             await charge_point.send_install_certificate()
@@ -518,23 +692,53 @@ async def api_handle(charge_point):
         elif user_input == 23:
             await charge_point.send_publish_firmware()
             
-        elif user_input == 113:
-            await charge_point.send_get_variables()
+        elif user_input == 24:
+            await charge_point.send_request_start_transaction()
             
-        elif user_input == 114:
+        elif user_input == 25:
+            await charge_point.send_request_stop_transaction()
+            
+        elif user_input == 26:
+            await charge_point.send_reserve_now()
+            
+        elif user_input == 27:
+            await charge_point.send_reset_request()
+            
+        elif user_input == 28:
+            await charge_point.send_send_local_list()
+            
+        elif user_input == 29:
+            await charge_point.send_set_charging_profile()
+            
+        elif user_input == 30:
+            await charge_point.send_set_display_message()
+            
+        elif user_input == 31:
             await charge_point.send_set_monitoring_base()
             
-        elif user_input == 115:
-            await charge_point.send_notify_event()
-            
-        elif user_input == 116:
+        elif user_input == 32:
             await charge_point.send_set_monitoring_level()
             
-        elif user_input == 117:
+        elif user_input == 33:
+            await charge_point.send_set_network_profile()
+            
+        elif user_input == 34:
             await charge_point.send_set_variable_monitoring()
             
-        elif user_input == 118:
+        elif user_input == 35:
             await charge_point.send_set_variables()
+            
+        elif user_input == 36:
+            await charge_point.send_trigger_message()
+            
+        elif user_input == 37:
+            await charge_point.send_unlock_connector()
+            
+        elif user_input == 38:
+            await charge_point.send_unpublish_firmware()
+            
+        elif user_input == 39:
+            await charge_point.send_update_firmware()
             
         else:
             logging.warning("Invalid number entered. Please try again.")
