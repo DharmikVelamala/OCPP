@@ -1382,7 +1382,7 @@ class ChargePoint(cp):
             checksum=checksum_value
         )
         response = await self.call(request)
-        if response.status=="Accepted" :
+        if response.status=="DownloadOngoing" :
             print("UpdateFirmwareRequest")
 
 
