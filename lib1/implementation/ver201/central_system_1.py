@@ -1,20 +1,28 @@
-import asyncio
+"""
+@brief Class representing a Charge Point in the OCPP (Open Charge Point Protocol) implementation.
+
+This class handles various OCPP requests and responses between a Charge Point and a central system.
+
+@details
+The ChargePoint class manages communication with a central system, processing requests such as
+start transaction, stop transaction, status notifications, firmware updates, etc.
+
+Example usage:
+@code
+charge_point = ChargePoint(...)
+charge_point.connect()
+...
+charge_point.disconnect()
+@endcode
+"""
+
+
 import logging
 from datetime import datetime
+import central_system_responce_handler
 
-connected = set()
-key = '0'
-
-try:
-    import websockets
-except ModuleNotFoundError:
-    print("This example relies on the 'websockets' package.")
-    print("Please install it by running: ")
-    print()
-    print(" $ pip install websockets")
-    import sys
-
-    sys.exit(1)
+# connected = set()
+# key = '0'
 
 from OCPP_LIB.ocpp_routing import on
 from OCPP_LIB.ver201 import ChargePoint as cp
@@ -24,8 +32,14 @@ from OCPP_LIB.ver201 import ocpp_request
 logging.basicConfig(level=logging.INFO)
 
 
-
-
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+# client = MongoClient("mongodb://localhost:27017/")
+uri = "mongodb+srv://Ritika:Ritz123@cluster0.ftwsd1h.mongodb.net/?appName=Cluster0"
+# Create a new client and connect to the server
+client = MongoClient(uri, server_api=ServerApi('1'),tlsAllowInvalidCertificates=True)
+db = client.ocpp_database
+collection=db.ocpp_log
 
 
 
@@ -33,62 +47,220 @@ class ChargePoint(cp):
     
     """! The ChargePoint base class.
     Defines the base class utilized by all OCPP APIS.
+    
+    @brief Class representing a Charge Point in the OCPP (Open Charge Point Protocol) implementation.
+    This class handles various OCPP requests and responses between a Charge Point and a central system.
+    
+    @details
+    The ChargePoint class manages communication with a central system, processing requests such as
+    start transaction, stop transaction, status notifications, firmware updates, etc.
     """
-    
-    
-    
     
     @on("Authorize")
     def on_authorize(self, id_token, **kwargs):
+        """
+        @brief Handles the Authorize request from the charge point.
+
+        This method is triggered when an Authorize request is received from the charge point.
+        It processes the ID token and other optional parameters, and returns an Authorize response.
+
+        @param id_token: The ID token provided in the Authorize request.
+        @param kwargs: Additional optional parameters.
+
+        @return ocpp_response.Authorize: The response to the Authorize request, containing ID token information.
+
+        @details
+        The method processes the ID token using the central system response handler and creates
+        an Authorize response with the ID token information.
+
+        Example usage:
+        @code
+        charge_point.on_authorize("IDToken", optional_param1="value1")
+        @endcode
+        """
+        id_token_info_value=central_system_responce_handler.authorize(id_token,**kwargs)
         return ocpp_response.Authorize(
-            id_token_info={"status":"Accepted"}
+            id_token_info=id_token_info_value
         )
 
     @on("BootNotification")
     def on_boot_notification(self, charging_station, reason, **kwargs):
+        """
+        @brief Handles the BootNotification request from the charge point.
+
+        This method is triggered when a BootNotification request is received from the charge point.
+        It processes the provided charging station information and reason for the notification,
+        and returns a BootNotification response.
+
+        @param charging_station: Information about the charging station.
+        @param reason: The reason for the BootNotification request.
+        @param kwargs: Additional optional parameters.
+
+        @return ocpp_response.BootNotification: The response to the BootNotification request, containing
+        the current time, interval, and status.
+
+        @details
+        The method processes the charging station information and reason using the central system
+        response handler and creates a BootNotification response with the current time, interval, and status.
+
+        Example usage:
+        @code
+        charge_point.on_boot_notification({"vendorName": "ACME"}, "PowerUp")
+        @endcode
+        """
+        current_time_value,interval_value,status_value=central_system_responce_handler.boot_notification(charging_station, reason, **kwargs)
         return ocpp_response.BootNotification(
-            current_time=datetime.utcnow().isoformat(),
-            interval=10,
-            status="Accepted"
+            current_time=current_time_value,
+            interval=interval_value,
+            status=status_value
         )
 
     @on("ClearedChargingLimit")
     def on_cleared_charging_limit(self, charging_limit_source, **kwargs):
+        """
+        @brief Handles the ClearedChargingLimit request from the charge point.
+
+        This method is triggered when a ClearedChargingLimit request is received from the charge point.
+        It processes the provided charging limit source and returns a ClearedChargingLimit response.
+
+        @param charging_limit_source: The source of the cleared charging limit.
+        @param kwargs: Additional optional parameters.
+
+        @return ocpp_response.ClearedChargingLimit: The response to the ClearedChargingLimit request.
+
+        @details
+        The method processes the charging limit source using the central system response handler
+        and creates a ClearedChargingLimit response.
+
+        Example usage:
+        @code
+        charge_point.on_cleared_charging_limit("EV")
+        @endcode
+        """
+        data=central_system_responce_handler.cleared_charging_limit(charging_limit_source, **kwargs)
         return ocpp_response.ClearedChargingLimit(
         )
 
     @on("DataTransfer")
     def on_data_transfer(self,vendor_id, **kwargs):
+        """
+        @brief Handles the DataTransfer request from the charge point.
+
+        This method is triggered when a DataTransfer request is received from the charge point.
+        It processes the provided vendor ID and returns a DataTransfer response with the appropriate status.
+
+        @param vendor_id: The vendor ID for the data transfer.
+        @param kwargs: Additional optional parameters.
+
+        @return ocpp_response.DataTransfer: The response to the DataTransfer request with the status value.
+
+        @details
+        The method processes the data transfer request using the central system response handler
+        and creates a DataTransfer response with the resulting status.
+
+        Example usage:
+        @code
+        charge_point.on_data_transfer("Vendor123")
+        @endcode
+        """
+        status_value=central_system_responce_handler.data_transfer(vendor_id,**kwargs)
         return ocpp_response.DataTransfer(
-            status="Accepted"
+            status=status_value
         )
 
     @on("FirmwareStatusNotification")
     def on_firmware_status_notification(self, status, **kwargs):
+        """
+        @brief Handles the FirmwareStatusNotification request from the charge point.
+
+        This method is triggered when a FirmwareStatusNotification request is received from the charge point.
+        It processes the provided status and returns a FirmwareStatusNotification response.
+
+        @param status: The firmware status.
+        @param kwargs: Additional optional parameters.
+
+        @return ocpp_response.FirmwareStatusNotification: The response to the FirmwareStatusNotification request.
+
+        @details
+        The method processes the firmware status notification using the central system response handler
+        and creates a FirmwareStatusNotification response.
+
+        Example usage:
+        @code
+        charge_point.on_firmware_status_notification("Downloaded")
+        @endcode
+        """
+        central_system_responce_handler.firmware_status_notification(status, **kwargs)
         return ocpp_response.FirmwareStatusNotification(
         )
 
     @on("Get15118EVCertificate")
     def on_get_15118_ev_certificate(self, iso15118_schema_version,action,exi_request, **kwargs):
+        status_value,exi_response_value=central_system_responce_handler.get_15118_ev_certificate( iso15118_schema_version,action,exi_request, **kwargs)
         return ocpp_response.Get15118EVCertificate(
-            status="Accepted",
-            exi_response="Raw CertificateInstallationRes response for the EV, Base64 encoded."
-        )
+            status=status_value,
+            exi_response=exi_response_value
+            )
 
     @on("GetCertificateStatus")
     def on_get_certificate_status(self, ocsp_request_data,**kwargs):
+        """
+        @brief Handles the Get15118EVCertificate request from the charge point.
+
+        This method is triggered when a Get15118EVCertificate request is received from the charge point.
+        It processes the provided parameters and returns a Get15118EVCertificate response.
+
+        @param iso15118_schema_version: The ISO 15118 schema version.
+        @param action: The action to be performed.
+        @param exi_request: The EXI request data.
+        @param kwargs: Additional optional parameters.
+
+        @return ocpp_response.Get15118EVCertificate: The response to the Get15118EVCertificate request.
+
+        @details
+        The method processes the request using the central system response handler and creates a
+        Get15118EVCertificate response with the status and EXI response.
+
+        Example usage:
+        @code
+        charge_point.on_get_15118_ev_certificate("2", "Install", "<exi_request_data>")
+        @endcode
+        """
+        status_value=central_system_responce_handler.get_certificate_status( ocsp_request_data,**kwargs)
         return ocpp_response.GetCertificateStatus(
-            status="Accepted",
+            status=status_value,
         )
 
     @on("GetDisplayMessages")
     def on_get_display_messages(self, request_id,**kwargs):
+        """
+        @brief Handles the GetDisplayMessages request from the charge point.
+
+        This method is triggered when a GetDisplayMessages request is received from the charge point.
+        It processes the provided parameters and returns a GetDisplayMessages response.
+
+        @param request_id: The request ID for the display messages.
+        @param kwargs: Additional optional parameters.
+
+        @return ocpp_response.GetDisplayMessages: The response to the GetDisplayMessages request.
+
+        @details
+        The method processes the request using the central system response handler and creates a
+        GetDisplayMessages response with the status.
+
+        Example usage:
+        @code
+        charge_point.on_get_display_messages(123)
+        @endcode
+        """
+        status_value=central_system_responce_handler.get_display_messages(request_id,**kwargs)
         return ocpp_response.GetDisplayMessages(
-            status="Accepted",
+            status=status_value
         )
 
     @on("Heartbeat")
     def on_heartbeat(self):
+        
         print("Got a Heartbeat!")
         return ocpp_response.Heartbeat(
             current_time=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") + "Z"
@@ -96,93 +268,474 @@ class ChargePoint(cp):
 
     @on("LogStatusNotification")
     def on_log_status_notification(self,**kwargs):
+        """
+        @brief Handles the LogStatusNotification request from the charge point.
+
+        This method is triggered when a LogStatusNotification request is received from the charge point.
+        It processes the notification using the central system response handler and returns
+        a LogStatusNotification response.
+
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.LogStatusNotification: The response to the LogStatusNotification request.
+
+        @details
+        The method invokes the central system response handler to process the LogStatusNotification request.
+        It then returns an empty LogStatusNotification response.
+
+        Example usage:
+        @code
+        charge_point.on_log_status_notification()
+        @endcode
+        """
+        central_system_responce_handler.log_status_notification(**kwargs)
         return ocpp_response.LogStatusNotification(
         )
 
     @on("MeterValues")
     def on_meter_values(self,**kwargs):
+        """
+        @brief Handles the MeterValues request from the charge point.
+
+        This method is triggered when a MeterValues request is received from the charge point.
+        It processes the meter values using the central system response handler and returns
+        a MeterValues response.
+
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.MeterValues: The response to the MeterValues request.
+
+        @details
+        The method invokes the central system response handler to process the MeterValues request.
+        It then returns an empty MeterValues response.
+
+        Example usage:
+        @code
+        charge_point.on_meter_values()
+        @endcode
+        """
+        central_system_responce_handler.meter_values(**kwargs)
         return ocpp_response.MeterValues(
-            
         )
 
     @on("NotifyChargingLimit")
     def on_notify_charging_limit(self,**kwargs):
+        """
+        @brief Handles the NotifyChargingLimit request from the charge point.
+
+        This method is triggered when a NotifyChargingLimit request is received from the charge point.
+        It processes the notification using the central system response handler and returns
+        a NotifyChargingLimit response.
+
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyChargingLimit: The response to the NotifyChargingLimit request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyChargingLimit request.
+        It then returns an empty NotifyChargingLimit response.
+
+        Example usage:
+        @code
+        charge_point.on_notify_charging_limit()
+        @endcode
+        """
+        central_system_responce_handler.notify_charging_limit(**kwargs)
         return ocpp_response.NotifyChargingLimit(
-            
         )
 
     @on("NotifyCustomerInformation")
     def on_notify_customer_information(self,data,seq_no,generated_at,request_id,**kwargs):
+        """
+        @brief Handles the NotifyCustomerInformation request from the charge point.
+
+        This method is triggered when a NotifyCustomerInformation request is received from the charge point.
+        It processes the customer information notification using the central system response handler and
+        returns a NotifyCustomerInformation response.
+
+        @param data: The customer information data.
+        @param seq_no: The sequence number of the request.
+        @param generated_at: The timestamp when the information was generated.
+        @param request_id: The unique identifier of the request.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyCustomerInformation: The response to the NotifyCustomerInformation request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyCustomerInformation request.
+        It then returns an empty NotifyCustomerInformation response.
+
+        Example usage:
+        @code
+        charge_point.on_notify_customer_information(data, seq_no, generated_at, request_id)
+        @endcode
+        """
+        central_system_responce_handler.notify_customer_information(data,seq_no,generated_at,request_id,**kwargs)
         return ocpp_response.NotifyCustomerInformation(
-            
         )
         
     @on("NotifyDisplayMessages")
     def on_notify_display_messages(self,request_id,**kwargs):
+        """
+        @brief Handles the NotifyDisplayMessages request from the charge point.
+
+        This method is triggered when a NotifyDisplayMessages request is received from the charge point.
+        It processes the display message notification using the central system response handler and
+        returns a NotifyDisplayMessages response.
+
+        @param request_id: The unique identifier of the request.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyDisplayMessages: The response to the NotifyDisplayMessages request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyDisplayMessages request.
+        It then returns an empty NotifyDisplayMessages response.
+
+        Example usage:
+        @code
+        charge_point.on_notify_display_messages(request_id)
+        @endcode
+        """
+        central_system_responce_handler.notify_display_messages(request_id,**kwargs)
         return ocpp_response.NotifyDisplayMessages(
-            
         )
 
     @on("NotifyEVChargingNeeds")
     def on_notify_ev_charging_needs(self,evse_id,charging_needs,**kwargs):
+        """
+        @brief Handles the NotifyEVChargingNeeds request from the charge point.
+
+        This method is triggered when a NotifyEVChargingNeeds request is received from the charge point.
+        It processes the EV charging needs notification using the central system response handler and
+        returns a NotifyEVChargingNeeds response.
+
+        @param evse_id: The identifier of the EVSE (Electric Vehicle Supply Equipment).
+        @param charging_needs: The charging needs data for the EV.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyEVChargingNeeds: The response to the NotifyEVChargingNeeds request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyEVChargingNeeds request.
+        It then returns a NotifyEVChargingNeeds response with the status.
+
+        Example usage:
+        @code
+        charge_point.on_notify_ev_charging_needs(evse_id, charging_needs)
+        @endcode
+        """
+        status_value=central_system_responce_handler.notify_ev_charging_needs(evse_id,charging_needs,**kwargs)
         return ocpp_response.NotifyEVChargingNeeds(
-            status="Accepted"
+            status=status_value
         )
 
     @on("NotifyEVChargingSchedule")
     def on_notify_ev_charging_schedule(self,time_base,evse_id,charging_schedule,**kwargs):
+        """
+        @brief Handles the NotifyEVChargingSchedule request from the charge point.
+
+        This method is triggered when a NotifyEVChargingSchedule request is received from the charge point.
+        It processes the EV charging schedule notification using the central system response handler and
+        returns a NotifyEVChargingSchedule response.
+
+        @param time_base: The time base for the charging schedule.
+        @param evse_id: The identifier of the EVSE (Electric Vehicle Supply Equipment).
+        @param charging_schedule: The charging schedule data for the EV.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyEVChargingSchedule: The response to the NotifyEVChargingSchedule request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyEVChargingSchedule request.
+        It then returns a NotifyEVChargingSchedule response with the status.
+
+        Example usage:
+        @code
+        charge_point.on_notify_ev_charging_schedule(time_base, evse_id, charging_schedule)
+        @endcode
+        """
+        status_value=central_system_responce_handler.notify_ev_charging_schedule(time_base,evse_id,charging_schedule,**kwargs)
         return ocpp_response.NotifyEVChargingSchedule(
-            status="Accepted"
+            status=status_value
         )
 
     @on("NotifyEvent")
     def on_notify_event(self,generated_at,seq_no,event_data,**kwargs):
+        """
+        @brief Handles the NotifyEvent request from the charge point.
+
+        This method is triggered when a NotifyEvent request is received from the charge point.
+        It processes the event notification using the central system response handler and
+        returns a NotifyEvent response.
+
+        @param generated_at: The timestamp when the event was generated.
+        @param seq_no: The sequence number of the event.
+        @param event_data: The data related to the event.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyEvent: The response to the NotifyEvent request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyEvent request.
+        It then returns a NotifyEvent response.
+
+        Example usage:
+        @code
+        charge_point.on_notify_event(generated_at, seq_no, event_data)
+        @endcode
+        """
+        central_system_responce_handler.notify_event(generated_at,seq_no,event_data,**kwargs)
         return ocpp_response.NotifyEvent(
         )
 
     @on("NotifyMonitoringReport")
     def on_notify_monitoring_report(self,generated_at,seq_no,request_id,**kwargs):
+        """
+        @brief Handles the NotifyMonitoringReport request from the charge point.
+
+        This method is triggered when a NotifyMonitoringReport request is received from the charge point.
+        It processes the monitoring report notification using the central system response handler and
+        returns a NotifyMonitoringReport response.
+
+        @param generated_at: The timestamp when the report was generated.
+        @param seq_no: The sequence number of the report.
+        @param request_id: The request ID associated with the monitoring report.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyMonitoringReport: The response to the NotifyMonitoringReport request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyMonitoringReport request.
+        It then returns a NotifyMonitoringReport response.
+
+        Example usage:
+        @code
+        charge_point.on_notify_monitoring_report(generated_at, seq_no, request_id)
+        @endcode
+        """
+        central_system_responce_handler.notify_monitoring_report(generated_at,seq_no,request_id,**kwargs)
         return ocpp_response.NotifyMonitoringReport(
         )
 
     @on("NotifyReport")
     def on_notify_report(self,generated_at,seq_no,request_id,**kwargs):
+        """
+        @brief Handles the NotifyReport request from the charge point.
+
+        This method is triggered when a NotifyReport request is received from the charge point.
+        It processes the report notification using the central system response handler and
+        returns a NotifyReport response.
+
+        @param generated_at: The timestamp when the report was generated.
+        @param seq_no: The sequence number of the report.
+        @param request_id: The request ID associated with the report.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.NotifyReport: The response to the NotifyReport request.
+
+        @details
+        The method invokes the central system response handler to process the NotifyReport request.
+        It then returns a NotifyReport response.
+
+        Example usage:
+        @code
+        charge_point.on_notify_report(generated_at, seq_no, request_id)
+        @endcode
+        """
+        central_system_responce_handler.notify_report(generated_at,seq_no,request_id,**kwargs)
         return ocpp_response.NotifyReport(
         )
 
     @on("PublishFirmwareStatusNotification")
     def on_publish_firmware_status_notification(self,status,**kwargs):
+        """
+        @brief Handles the PublishFirmwareStatusNotification request from the charge point.
+
+        This method is triggered when a PublishFirmwareStatusNotification request is received from the charge point.
+        It processes the firmware status notification using the central system response handler and
+        returns a PublishFirmwareStatusNotification response.
+
+        @param status: The status of the firmware publication.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.PublishFirmwareStatusNotification: The response to the PublishFirmwareStatusNotification request.
+
+        @details
+        The method invokes the central system response handler to process the PublishFirmwareStatusNotification request.
+        It then returns a PublishFirmwareStatusNotification response.
+
+        Example usage:
+        @code
+        charge_point.on_publish_firmware_status_notification(status)
+        @endcode
+        """
+        central_system_responce_handler.publish_firmware_status_notification(status,**kwargs)
         return ocpp_response.PublishFirmwareStatusNotification(
         )
 
     @on("ReportChargingProfiles")
     def on_report_charging_profiles(self,request_id,charging_limit_source,charging_profile,evse_id,**kwargs):
+        """
+        @brief Handles the ReportChargingProfiles request from the charge point.
+
+        This method is triggered when a ReportChargingProfiles request is received from the charge point.
+        It processes the charging profiles report using the central system response handler and
+        returns a ReportChargingProfiles response.
+
+        @param request_id: The ID of the charging profile report request.
+        @param charging_limit_source: The source of the charging limit.
+        @param charging_profile: The charging profile information.
+        @param evse_id: The ID of the EVSE (Electric Vehicle Supply Equipment) associated with the report.
+        @param kwargs: Additional keyword arguments passed along with the request.
+
+        @return ocpp_response.ReportChargingProfiles: The response to the ReportChargingProfiles request.
+
+        @details
+        The method invokes the central system response handler to process the ReportChargingProfiles request.
+        It then returns a ReportChargingProfiles response.
+
+        Example usage:
+        @code
+        charge_point.on_report_charging_profiles(request_id, charging_limit_source, charging_profile, evse_id)
+        @endcode
+        """
+        central_system_responce_handler.report_charging_profiles(request_id,charging_limit_source,charging_profile,evse_id,**kwargs)
         return ocpp_response.ReportChargingProfiles(
         )
 
     @on("ReservationStatusUpdate")
     def on_reservation_status_update(self,reservation_id,reservation_update_status):
+        """
+        @brief Handles the ReservationStatusUpdate request from the charge point.
+
+        This method is triggered when a ReservationStatusUpdate request is received from the charge point.
+        It processes the reservation status update using the central system response handler and
+        returns a ReservationStatusUpdate response.
+
+        @param reservation_id: The ID of the reservation for which the status is being updated.
+        @param reservation_update_status: The updated status of the reservation.
+        @return ocpp_response.ReservationStatusUpdate: The response to the ReservationStatusUpdate request.
+
+        @details
+        The method invokes the central system response handler to process the ReservationStatusUpdate request.
+        It then returns a ReservationStatusUpdate response.
+
+        Example usage:
+        @code
+        charge_point.on_reservation_status_update(reservation_id, reservation_update_status)
+        @endcode
+        """
+        central_system_responce_handler.reservation_status_update(reservation_id,reservation_update_status)
         return ocpp_response.ReservationStatusUpdate(
         )
 
     @on("SecurityEventNotification")
     def on_security_event_notification(self,type,timestamp,**kwargs):
+        """
+        @brief Handles the SecurityEventNotification request from the charge point.
+
+        This method is triggered when a SecurityEventNotification request is received from the charge point.
+        It processes the security event notification using the central system response handler and
+        returns a SecurityEventNotification response.
+
+        @param type_value: The type of security event being notified.
+        @param timestamp: The timestamp when the security event occurred.
+        @return ocpp_response.SecurityEventNotification: The response to the SecurityEventNotification request.
+
+        @details
+        The method invokes the central system response handler to process the SecurityEventNotification request.
+        It then returns a SecurityEventNotification response.
+
+        Example usage:
+        @code
+        charge_point.on_security_event_notification(type_value, timestamp)
+        @endcode
+        """
+        central_system_responce_handler.security_event_notification(type,timestamp,**kwargs)
         return ocpp_response.SecurityEventNotification(
         )
 
     @on("SignCertificate")
     def on_sign_certificate(self,csr,**kwargs):
+        """
+        @brief Handles the SignCertificate request from the charge point.
+
+        This method is triggered when a SignCertificate request is received from the charge point.
+        It processes the certificate signing request (CSR) using the central system response handler and
+        returns a SignCertificate response indicating acceptance.
+
+        @param csr: The certificate signing request (CSR) received from the charge point.
+        @return ocpp_response.SignCertificate: The response to the SignCertificate request indicating acceptance.
+
+        @details
+        The method invokes the central system response handler to process the SignCertificate request with
+        the provided CSR. It then returns a SignCertificate response with status "Accepted".
+
+        Example usage:
+        @code
+        charge_point.on_sign_certificate(csr)
+        @endcode
+        """
+        central_system_responce_handler.sign_certificate(csr,**kwargs)
         return ocpp_response.SignCertificate(
             status="Accepted"
         )
 
     @on("StatusNotification")
     def on_status_notification(self,timestamp,connector_status,evse_id,connector_id,**kwargs):
+        """
+        @brief Handles the StatusNotification request from the charge point.
+
+        This method is triggered when a StatusNotification request is received from the charge point.
+        It processes the status update including timestamp, connector status, EVSE ID, and connector ID,
+        using the central system response handler.
+
+        @param timestamp: Timestamp of the status notification.
+        @param connector_status: Status of the connector (e.g., Available, Unavailable).
+        @param evse_id: Identifier of the Electric Vehicle Supply Equipment (EVSE).
+        @param connector_id: Identifier of the connector on the EVSE.
+        @return ocpp_response.StatusNotification: The response to the StatusNotification request.
+
+        @details
+        The method invokes the central system response handler to process the StatusNotification request
+        with the provided parameters. It then returns a StatusNotification response.
+
+        Example usage:
+        @code
+        charge_point.on_status_notification(timestamp, connector_status, evse_id, connector_id)
+        @endcode
+        """
+        central_system_responce_handler.status_notification(timestamp,connector_status,evse_id,connector_id,**kwargs)
         return ocpp_response.StatusNotification(
         )
 
     @on("TransactionEvent")
     def on_transaction_event(self,event_type,timestamp,trigger_reason,seq_no,transaction_info,**kwargs):
+        """
+        @brief Handles the TransactionEvent request from the charge point.
+
+        This method is triggered when a TransactionEvent request is received from the charge point.
+        It processes the transaction event including event type, timestamp, trigger reason, sequence number,
+        and transaction information, using the central system response handler.
+
+        @param event_type: Type of transaction event (e.g., Started, Ended).
+        @param timestamp: Timestamp of the transaction event.
+        @param trigger_reason: Reason for triggering the event.
+        @param seq_no: Sequence number of the event.
+        @param transaction_info: Information related to the transaction.
+        @return ocpp_response.TransactionEvent: The response to the TransactionEvent request.
+
+        @details
+        The method invokes the central system response handler to process the TransactionEvent request
+        with the provided parameters. It then returns a TransactionEvent response.
+
+        Example usage:
+        @code
+        charge_point.on_transaction_event(event_type, timestamp, trigger_reason, seq_no, transaction_info)
+        @endcode
+        """
+        central_system_responce_handler.transaction_event(event_type,timestamp,trigger_reason,seq_no,transaction_info,**kwargs)
         return ocpp_response.TransactionEvent(
         )
 
@@ -222,11 +775,17 @@ class ChargePoint(cp):
         request = ocpp_request.CancelReservation(
             reservation_id = reservation_id_value
         )
-        print(request)
         response = await self.call(request)
-        print(response)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'cancelReservation' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="CancelReservation"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="CancelReservation"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_certificate_signed(self,certificate_chain_value):
         """
@@ -258,6 +817,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'certificate signed' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="CertificateSigned"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="CertificateSigned"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_change_availability(self,operational_status_value):
         """
@@ -287,6 +854,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'Change available' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="ChangeAvailability"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="ChangeAvailability"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_clear_cache(self):
         """
@@ -313,6 +888,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'clear cache' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="ClearCache"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="ClearCache"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_clear_charging_profile(self):
         """
@@ -339,6 +922,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'Clear Charging Profile' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="ClearChargingProfile"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="ClearChargingProfile"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_clear_display_message(self,id_value):
         """
@@ -368,6 +959,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'Clear Display Message' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="ClearDisplayMessage"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="ClearDisplayMessage"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_clear_variable_monitoring(self,id_list_value):
         """
@@ -399,6 +998,14 @@ class ChargePoint(cp):
             print("Connected to chargepoint system 'Clear Variable Monitoringt")
         else:
             print("Connected to chargepoint system 'Clear Variable Monitoringt,error")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="ClearVariableMonitoring"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="ClearVariableMonitoring"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_cost_updated(self,total_cost_value,transaction_id_value):
         """
@@ -432,6 +1039,15 @@ class ChargePoint(cp):
             print("Connected to chargepoint system 'cost update'")
         else:
             print("Connected to chargepoint system 'cost update',error")
+        
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="CostUpdated"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="CostUpdated"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_customer_information(self,request_id_value,report_value,clear_value):
         """
@@ -469,6 +1085,14 @@ class ChargePoint(cp):
             print("Connected to chargepoint system 'Customer Information'")
         else:
             print("Connected to chargepoint system 'Customer Information',error")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="CustomerInformation"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="CustomerInformation"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_data_transfer(self,vendor_id_value):
         """
@@ -500,6 +1124,14 @@ class ChargePoint(cp):
             print("Connected to chargepoint system 'Data Transfer'")
         else:
             print("Connected to chargepoint system 'Data Transfer',error")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="DataTransfer"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="DataTransfer"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_delete_certificate(self,certificate_hash_data_value):
         """
@@ -531,6 +1163,14 @@ class ChargePoint(cp):
             print("Connected to chargepoint system 'Delete Certificate'")
         else:
             print("Connected to chargepoint system 'Delete Certificate',error")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="DeleteCertificate"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="DeleteCertificate"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_base_report(self,request_id_value,report_base_value):
         """
@@ -562,6 +1202,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'get base report")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetBaseReport"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetBaseReport"
+        collection.insert_one(data_res)
+        
+        return response
             
 
     async def send_get_charging_profiles(self,request_id_value,charging_profile_value):
@@ -595,6 +1243,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'Get Charging Profiles' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetChargingProfiles"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetChargingProfiles"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_composite_schedule(self,duration_value,evse_id_value):
         """
@@ -627,6 +1283,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'GetCompositeSchedule'")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetCompositeSchedule"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetCompositeSchedule"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_installed_certificate_ids(self):
         """
@@ -653,6 +1317,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'Get Installed Certificate Ids'")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetInstalledCertificateIds"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetInstalledCertificateIds"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_local_list_version(self):
         """
@@ -679,6 +1351,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.version_number == 201:
             print("Connected to chargepoint system 'Get Local List Version'")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetLocalListVersion"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetLocalListVersion"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_log(self,log_value,log_type_value,request_id_value):
         """
@@ -712,6 +1392,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'Get Log'")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetLog"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetLog"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_monitoring_report(self,request_id_value):
         """
@@ -739,6 +1427,14 @@ class ChargePoint(cp):
         response = await self.call(request) 
         if response.status == "Accepted":
             print("Connected to chargepoint system 'get monitoring report' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetMonitoringReport"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetMonitoringReport"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_report(self,request_id_value):
         """
@@ -768,6 +1464,14 @@ class ChargePoint(cp):
         response = await self.call(request) 
         if response.status == "Accepted":
             print("Connected to chargepoint system 'get monitoring report' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetReport"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetReport"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_get_transaction_status(self):
         """
@@ -794,6 +1498,14 @@ class ChargePoint(cp):
         response = await self.call(request) 
         if response.messages_in_queue == True:
             print("Connected to chargepoint system 'Get Transaction Status' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetTransactionStatus"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetTransactionStatus"
+        collection.insert_one(data_res)
+        
+        return response
         
 
     async def send_get_variables(self,get_variable_data_value):
@@ -832,6 +1544,14 @@ class ChargePoint(cp):
         else:
             
             print("dharmik"+"response.get_variable_result[0].get('attributeStatus')")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="GetVariables"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="GetVariables"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_install_certificate(self,certificate_value,certificate_type_value):
         """
@@ -863,6 +1583,14 @@ class ChargePoint(cp):
         
         if response.status == "Accepted":
             print("Connected to chargepoint system 'InstallCertificate'")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="InstallCertificate"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="InstallCertificate"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_publish_firmware(self,location_value,checksum_value,request_id_value):
         """
@@ -897,6 +1625,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'PublishFirmware'")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="PublishFirmware"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="PublishFirmware"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_request_start_transaction(self,id_token_value,remote_start_id_value):
         """
@@ -928,6 +1664,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'RequestStartTransaction'")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="RequestStartTransaction"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="RequestStartTransaction"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def  send_request_stop_transaction(self,transaction_id_value):
         """
@@ -957,6 +1701,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Stop Transaction")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="RequestStopTransaction"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="RequestStopTransaction"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def  send_reserve_now(self,id_value,expiry_date_time_value,id_token_value):
         """
@@ -991,6 +1743,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint system 'ReserveNow")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="ReserveNow"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="ReserveNow"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_reset_request(self,type_value):
         """
@@ -1020,6 +1780,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("Connected to chargepoint reset request")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="Reset"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="Reset"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_send_local_list(self,version_number_value,update_type_value):
         """
@@ -1052,6 +1820,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("connected to charge point on Send Local List Request")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SendLocalList"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SendLocalList"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_set_charging_profile(self,evse_id_value,charging_profile_value):
         """
@@ -1083,6 +1859,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("connected to charging point on Set charging profile")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SetChargingProfile"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SetChargingProfile"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_set_display_message(self,message_value):
         """
@@ -1114,6 +1898,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("connected to charging point on set display message")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SetDisplayMessage"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SetDisplayMessage"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_set_monitoring_base(self,monitoring_base_value):
         """
@@ -1143,6 +1935,14 @@ class ChargePoint(cp):
         response = await self.call(request) 
         if response.status == "Accepted":
             print("Connected to chargepoint system 'set monitoring base' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SetMonitoringBase"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SetMonitoringBase"
+        collection.insert_one(data_res)
+        
+        return response
             
     async def send_set_monitoring_level(self,severity_value):
         """
@@ -1174,6 +1974,14 @@ class ChargePoint(cp):
         response = await self.call(request) 
         if response.status == "Accepted":
             print("Connected to chargepoint system 'set monitoring level' ")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SetMonitoringLevel"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SetMonitoringLevel"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_set_network_profile(self,configuration_slot_value,connection_data_value):
         """
@@ -1210,6 +2018,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status == "Accepted":
             print("connected to charging point on set network profile")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SetNetworkProfile"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SetNetworkProfile"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_set_variable_monitoring(self,set_monitoring_data_value):
         """
@@ -1247,10 +2063,14 @@ class ChargePoint(cp):
         
         if response.set_monitoring_result[0].get("status") == "Accepted":
             print("Connected to chargepoint 'set variable monitoring' ")
-        else:
-            
-            print("dharmik",response.get_variable_result[0].get("attributeStatus"))
-        # await request
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SetVariableMonitoring"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SetVariableMonitoring"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_set_variables(self,set_variable_data_value):
         """
@@ -1284,7 +2104,14 @@ class ChargePoint(cp):
             set_variable_data=set_variable_data_value
         )
         response = await self.call(request)
-        print(response)
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="SetVariables"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="SetVariables"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_trigger_message(self,requested_message_value):
         """
@@ -1316,6 +2143,14 @@ class ChargePoint(cp):
             print("Trigger message request accepted")
         else:
             print("Tigger message request rejected.")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="TriggerMessage"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="TriggerMessage"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_unlock_connector(self,evse_id_value,connector_id_value):
         """
@@ -1355,6 +2190,14 @@ class ChargePoint(cp):
             print("Unknown connector.")
         else:
             print("Unknown status received:", response.status)
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="UnlockConnector"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="UnlockConnector"
+        collection.insert_one(data_res)
+        
+        return response
 
     async def send_unpublish_firmware(self,checksum_value):
         """
@@ -1384,6 +2227,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status=="DownloadOngoing" :
             print("UpdateFirmwareRequest")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="UnpublishFirmware"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="UnpublishFirmware"
+        collection.insert_one(data_res)
+        
+        return response
 
 
     async def send_update_firmware(self,retries_value,request_id_value,firmware_value):
@@ -1418,6 +2269,14 @@ class ChargePoint(cp):
         response = await self.call(request)
         if response.status=="DownloadOngoing" :
             print("UpdateFirmwareRequest")
+        data_req=request.__dict__
+        data_req["API_REQUEST"]="UpdateFirmware"
+        collection.insert_one(data_req)
+        data_res=response.__dict__
+        data_res["API_RESPONSE"]="UpdateFirmware"
+        collection.insert_one(data_res)
+        
+        return response
 
 
 

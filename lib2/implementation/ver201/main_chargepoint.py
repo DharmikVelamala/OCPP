@@ -3,6 +3,22 @@ import logging
 from OCPP_LIB.ocpp_routing import on
 from datetime import datetime
 
+
+"""
+@brief Ensures the presence of the 'websockets' package for the example.
+
+This script attempts to import the 'websockets' package. If the package is not found,
+it provides instructions to install it using pip.
+
+@details
+If 'websockets' is not installed, the script prints an error message and exits with
+a non-zero status code.
+
+Example usage:
+@code
+python your_script.py
+@endcode
+"""
 try:
     import websockets
 except ModuleNotFoundError:
@@ -11,10 +27,15 @@ except ModuleNotFoundError:
     print()
     print(" $ pip install websockets")
     import sys
-
+    
     sys.exit(1)
+    
+    
+    
 import charge_point_1
-
+from OCPP_LIB.ver201 import ChargePoint as cp
+from OCPP_LIB.ver201 import ocpp_request
+from OCPP_LIB.ver201 import ocpp_response
 logging.basicConfig(level=logging.INFO)
 
 async def api_handle(charge_point):
@@ -194,7 +215,6 @@ async def api_handle(charge_point):
             seq_no_value = 1
             transaction_info_value={
                 "transactionId":"123123123123"
-                
             }
             await charge_point.send_transaction_event(event_type_value,timestamp_value,trigger_reason_value,seq_no_value,transaction_info_value)
             

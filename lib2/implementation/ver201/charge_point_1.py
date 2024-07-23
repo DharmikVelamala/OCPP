@@ -1,18 +1,28 @@
+"""
+@brief Class representing a Charge Point in the OCPP (Open Charge Point Protocol) implementation.
+
+This class handles various OCPP requests and responses between a Charge Point and a central system.
+
+@details
+The ChargePoint class manages communication with a central system, processing requests such as
+start transaction, stop transaction, status notifications, firmware updates, etc.
+
+Example usage:
+@code
+charge_point = ChargePoint(...)
+charge_point.connect()
+...
+charge_point.disconnect()
+@endcode
+"""
+
+
+
 import asyncio
 import logging
 from OCPP_LIB.ocpp_routing import on
-from datetime import datetime
+import charge_point_responce_handler
 
-try:
-    import websockets
-except ModuleNotFoundError:
-    print("This example relies on the 'websockets' package.")
-    print("Please install it by running: ")
-    print()
-    print(" $ pip install websockets")
-    import sys
-
-    sys.exit(1)
 
 
 from OCPP_LIB.ver201 import ChargePoint as cp
@@ -23,6 +33,17 @@ logging.basicConfig(level=logging.INFO)
 
 
 class ChargePoint(cp):
+    """! The ChargePoint base class.
+    Defines the base class utilized by all OCPP APIS.
+    
+    @brief Class representing a Charge Point in the OCPP (Open Charge Point Protocol) implementation.
+    This class handles various OCPP requests and responses between a Charge Point and a central system.
+    
+    @details
+    The ChargePoint class manages communication with a central system, processing requests such as
+    start transaction, stop transaction, status notifications, firmware updates, etc.
+    """
+    
     async def send_authorize(self,id_token_value):
         """
         @brief Sends an Authorize request to the charge point system.
@@ -846,268 +867,1026 @@ class ChargePoint(cp):
 
     @on("CancelReservation")
     def on_cancel_reservation(self,reservation_id, **kwargs):
+        """
+        @brief Handles the CancelReservation request from the central system.
+
+        This method is triggered when a CancelReservation request is received from the central system.
+        It processes the reservation cancellation using the charge point response handler.
+
+        @param reservation_id: The ID of the reservation to be canceled.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.CancelReservation: The response to the CancelReservation request.
+
+        @details
+        The method invokes the charge point response handler to process the CancelReservation request
+        with the provided reservation ID and any additional keyword arguments. It then returns a 
+        CancelReservation response with the status of the cancellation.
+
+        Example usage:
+        @code
+        charge_point.on_cancel_reservation(reservation_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.cancel_reservation(reservation_id, **kwargs)
         return ocpp_response.CancelReservation(
-            status="Accepted"
+            status=status_value
         )
 
     @on("CertificateSigned")
     def on_certificate_signed(self,certificate_chain, **kwargs):
+        """
+        @brief Handles the CertificateSigned request from the central system.
+
+        This method is triggered when a CertificateSigned request is received from the central system.
+        It processes the signed certificate chain using the charge point response handler.
+
+        @param certificate_chain: The chain of signed certificates.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.CertificateSigned: The response to the CertificateSigned request.
+
+        @details
+        The method invokes the charge point response handler to process the CertificateSigned request
+        with the provided certificate chain and any additional keyword arguments. It then returns a 
+        CertificateSigned response with the status of the certificate signing process.
+
+        Example usage:
+        @code
+        charge_point.on_certificate_signed(certificate_chain)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.certificate_signed(certificate_chain, **kwargs)
         return ocpp_response.CertificateSigned(
-            status="Accepted"
+            status=status_value
         )
 
     @on("ChangeAvailability")
     def on_change_availability(self,operational_status, **kwargs):
+        """
+        @brief Handles the ChangeAvailability request from the central system.
+
+        This method is triggered when a ChangeAvailability request is received from the central system.
+        It processes the change in operational status using the charge point response handler.
+
+        @param operational_status: The new operational status of the charge point (e.g., Operative, Inoperative).
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.ChangeAvailability: The response to the ChangeAvailability request.
+
+        @details
+        The method invokes the charge point response handler to process the ChangeAvailability request
+        with the provided operational status and any additional keyword arguments. It then returns a 
+        ChangeAvailability response with the status of the availability change process.
+
+        Example usage:
+        @code
+        charge_point.on_change_availability(operational_status)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.change_availability(operational_status, **kwargs)
         return ocpp_response.ChangeAvailability(
-            status="Accepted"
+            status=status_value
         )
 
     @on("ClearCache")
     def on_clear_cache(self, **kwargs):
+        """
+        @brief Handles the ClearCache request from the central system.
+
+        This method is triggered when a ClearCache request is received from the central system.
+        It processes the request to clear the cache using the charge point response handler.
+
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.ClearCache: The response to the ClearCache request.
+
+        @details
+        The method invokes the charge point response handler to process the ClearCache request
+        with any additional keyword arguments. It then returns a ClearCache response with the status
+        of the cache clearing process.
+
+        Example usage:
+        @code
+        charge_point.on_clear_cache()
+        @endcode
+        """
+        status_value=charge_point_responce_handler.clear_cache(**kwargs)
         return ocpp_response.ClearCache(
-            status="Accepted"
+            status=status_value
         )
 
     @on("ClearChargingProfile")
     def on_clear_charging_profile(self, **kwargs):
+        """
+        @brief Handles the ClearChargingProfile request from the central system.
+
+        This method is triggered when a ClearChargingProfile request is received from the central system.
+        It processes the request to clear the charging profile using the charge point response handler.
+
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.ClearChargingProfile: The response to the ClearChargingProfile request.
+
+        @details
+        The method invokes the charge point response handler to process the ClearChargingProfile request
+        with any additional keyword arguments. It then returns a ClearChargingProfile response with the 
+        status of the charging profile clearing process.
+
+        Example usage:
+        @code
+        charge_point.on_clear_charging_profile()
+        @endcode
+        """
+        status_value=charge_point_responce_handler.clear_charging_profile(**kwargs)
         return ocpp_response.ClearChargingProfile(
-            status="Accepted"
+            status=status_value
         )
 
     @on("ClearDisplayMessage")
     def on_clear_display_message(self,id, **kwargs):
+        """
+        @brief Handles the ClearDisplayMessage request from the central system.
+
+        This method is triggered when a ClearDisplayMessage request is received from the central system.
+        It processes the request to clear a display message using the charge point response handler.
+
+        @param id: The ID of the display message to be cleared.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.ClearDisplayMessage: The response to the ClearDisplayMessage request.
+
+        @details
+        The method invokes the charge point response handler to process the ClearDisplayMessage request
+        with the provided display message ID and any additional keyword arguments. It then returns a 
+        ClearDisplayMessage response with the status of the display message clearing process.
+
+        Example usage:
+        @code
+        charge_point.on_clear_display_message(id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.clear_display_message(id,**kwargs)
         return ocpp_response.ClearDisplayMessage(
-            status="Accepted"
+            status=status_value
         )
 
     @on("ClearVariableMonitoring")
     def on_clear_variable_monitoring(self,id, **kwargs):
+        """
+        @brief Handles the ClearVariableMonitoring request from the central system.
+
+        This method is triggered when a ClearVariableMonitoring request is received from the central system.
+        It processes the request to clear variable monitoring using the charge point response handler.
+
+        @param id: The ID of the variable monitoring to be cleared.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.ClearVariableMonitoring: The response to the ClearVariableMonitoring request.
+
+        @details
+        The method invokes the charge point response handler to process the ClearVariableMonitoring request
+        with the provided variable monitoring ID and any additional keyword arguments. It then returns a 
+        ClearVariableMonitoring response with the result of the variable monitoring clearing process.
+
+        Example usage:
+        @code
+        charge_point.on_clear_variable_monitoring(id)
+        @endcode
+        """
+        clear_monitoring_result_value=charge_point_responce_handler.clear_variable_monitoring(id,**kwargs)
         return ocpp_response.ClearVariableMonitoring(
-            clear_monitoring_result=[
-                {
-                    "status":"Accepted",
-                    "id" : 5
-                }
-            ]
+            clear_monitoring_result=clear_monitoring_result_value
         )
 
     @on("CostUpdated")
-    def on_cost_update(self,id,total_cost,transaction_id, **kwargs):
+    def on_cost_update(self,total_cost,transaction_id, **kwargs):
+        """
+        @brief Handles the CostUpdated event from the central system.
+
+        This method is triggered when a CostUpdated event is received from the central system.
+        It processes the updated cost information using the charge point response handler.
+
+        @param id: The ID associated with the cost update event.
+        @param total_cost: The total cost after the update.
+        @param transaction_id: The ID of the transaction associated with the cost update.
+        @param kwargs: Additional keyword arguments.
+
+        @details
+        The method invokes the charge point response handler to process the CostUpdated event
+        with the provided parameters. It does not return any specific response object directly.
+
+        Example usage:
+        @code
+        charge_point.on_cost_update(id, total_cost, transaction_id)
+        @endcode
+        """
+        charge_point_responce_handler.cost_update(total_cost,transaction_id, **kwargs)
         return ocpp_response.CostUpdated(
         )
 
     @on("CustomerInformation")
     def on_customer_information(self,request_id,report,clear, **kwargs):
-        
+        """
+        @brief Handles the CustomerInformation request from the central system.
+
+        This method is triggered when a CustomerInformation request is received from the central system.
+        It processes the customer information request using the charge point response handler.
+
+        @param request_id: The ID of the customer information request.
+        @param report: A flag indicating whether to report customer information.
+        @param clear: A flag indicating whether to clear customer information.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.CustomerInformation: The response to the CustomerInformation request.
+
+        @details
+        The method invokes the charge point response handler to process the CustomerInformation request
+        with the provided request ID, report flag, clear flag, and any additional keyword arguments. It then
+        returns a CustomerInformation response with the status of the customer information processing.
+
+        Example usage:
+        @code
+        charge_point.on_customer_information(request_id, report, clear)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.customer_information(request_id,report,clear, **kwargs)
         return ocpp_response.CustomerInformation(
-            status="Accepted"
+            status=status_value
         )
 
     @on("DataTransfer")
     def on_data_transfer(self,vendor_id, **kwargs):
+        """
+        @brief Handles the DataTransfer request from the central system.
+
+        This method is triggered when a DataTransfer request is received from the central system.
+        It processes the data transfer request using the charge point response handler.
+
+        @param vendor_id: The vendor ID associated with the data transfer request.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.DataTransfer: The response to the DataTransfer request.
+
+        @details
+        The method invokes the charge point response handler to process the DataTransfer request
+        with the provided vendor ID and any additional keyword arguments. It then returns a 
+        DataTransfer response with the status of the data transfer process.
+
+        Example usage:
+        @code
+        charge_point.on_data_transfer(vendor_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.data_transfer(vendor_id,**kwargs)
         return ocpp_response.DataTransfer(
-            status="Accepted"
+            status=status_value
         )
 
     @on("DeleteCertificate")
     def on_delete_certificate(self,certificate_hash_data, **kwargs):
+        """
+        @brief Handles the DeleteCertificate request from the central system.
+
+        This method is triggered when a DeleteCertificate request is received from the central system.
+        It processes the request to delete a certificate using the charge point response handler.
+
+        @param certificate_hash_data: The hash data of the certificate to be deleted.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.DeleteCertificate: The response to the DeleteCertificate request.
+
+        @details
+        The method invokes the charge point response handler to process the DeleteCertificate request
+        with the provided certificate hash data and any additional keyword arguments. It then returns a 
+        DeleteCertificate response with the status of the certificate deletion process.
+
+        Example usage:
+        @code
+        charge_point.on_delete_certificate(certificate_hash_data)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.delete_certificate(certificate_hash_data,**kwargs)
         return ocpp_response.DeleteCertificate(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetBaseReport")
     def on_get_base_report(self, request_id, report_base, **kwargs):
+        """
+        @brief Handles the GetBaseReport request from the central system.
+
+        This method is triggered when a GetBaseReport request is received from the central system.
+        It processes the request to generate a base report using the charge point response handler.
+
+        @param request_id: The ID of the report request.
+        @param report_base: The base of the report to be generated.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetBaseReport: The response to the GetBaseReport request.
+
+        @details
+        The method invokes the charge point response handler to process the GetBaseReport request
+        with the provided request ID, report base, and any additional keyword arguments. It then
+        returns a GetBaseReport response with the status of the base report generation process.
+
+        Example usage:
+        @code
+        charge_point.on_get_base_report(request_id, report_base)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.get_base_report(request_id, report_base, **kwargs)
         return ocpp_response.GetBaseReport(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetChargingProfiles")
     def on_get_charging_profiles(self, request_id, charging_profile, **kwargs):
+        """
+        @brief Handles the GetChargingProfiles request from the central system.
+
+        This method is triggered when a GetChargingProfiles request is received from the central system.
+        It processes the request to retrieve charging profiles using the charge point response handler.
+
+        @param request_id: The ID of the charging profiles request.
+        @param charging_profile: The charging profile information to be retrieved.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetChargingProfiles: The response to the GetChargingProfiles request.
+
+        @details
+        The method invokes the charge point response handler to process the GetChargingProfiles request
+        with the provided request ID, charging profile information, and any additional keyword arguments.
+        It then returns a GetChargingProfiles response with the status of the charging profiles retrieval process.
+
+        Example usage:
+        @code
+        charge_point.on_get_charging_profiles(request_id, charging_profile)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.get_charging_profiles(request_id, charging_profile, **kwargs)
         return ocpp_response.GetChargingProfiles(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetCompositeSchedule")
     def on_get_composite_schedule(self, duration, evse_id, **kwargs):
+        """
+        @brief Handles the GetCompositeSchedule request from the central system.
+
+        This method is triggered when a GetCompositeSchedule request is received from the central system.
+        It processes the request to retrieve a composite schedule using the charge point response handler.
+
+        @param duration: The duration for which the composite schedule is requested.
+        @param evse_id: The ID of the Electric Vehicle Supply Equipment (EVSE) for which the schedule is requested.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetCompositeSchedule: The response to the GetCompositeSchedule request.
+
+        @details
+        The method invokes the charge point response handler to process the GetCompositeSchedule request
+        with the provided duration, EVSE ID, and any additional keyword arguments. It then returns a
+        GetCompositeSchedule response with the status of the composite schedule retrieval process.
+
+        Example usage:
+        @code
+        charge_point.on_get_composite_schedule(duration, evse_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.get_composite_schedule( duration, evse_id, **kwargs)
         return ocpp_response.GetCompositeSchedule(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetInstalledCertificateIds")
     def on_get_installed_certificate_ids(self,**kwargs):
+        """
+        @brief Handles the GetInstalledCertificateIds request from the central system.
+
+        This method is triggered when a GetInstalledCertificateIds request is received from the central system.
+        It processes the request to retrieve installed certificate IDs using the charge point response handler.
+
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetInstalledCertificateIds: The response to the GetInstalledCertificateIds request.
+
+        @details
+        The method invokes the charge point response handler to process the GetInstalledCertificateIds request
+        with any additional keyword arguments. It then returns a GetInstalledCertificateIds response with the status
+        of the installed certificate IDs retrieval process.
+
+        Example usage:
+        @code
+        charge_point.on_get_installed_certificate_ids()
+        @endcode
+        """
+        status_value=charge_point_responce_handler.get_installed_certificate_ids(**kwargs)
         return ocpp_response.GetInstalledCertificateIds(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetLocalListVersion")
     def on_get_local_list_version(self,**kwargs):
+        """
+        @brief Handles the GetLocalListVersion request from the central system.
+
+        This method is triggered when a GetLocalListVersion request is received from the central system.
+        It processes the request to retrieve the local list version using the charge point response handler.
+
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetLocalListVersion: The response to the GetLocalListVersion request, including the version number.
+
+        @details
+        The method invokes the charge point response handler to process the GetLocalListVersion request
+        with any additional keyword arguments. It then returns a GetLocalListVersion response with the 
+        version number of the local list.
+
+        Example usage:
+        @code
+        charge_point.on_get_local_list_version()
+        @endcode
+        """
+        version_number_value=charge_point_responce_handler.get_local_list_version(**kwargs)
         return ocpp_response.GetLocalListVersion(
-            version_number=201
+            version_number=version_number_value
         )
 
     @on("GetLog")
     def on_get_log(self,**kwargs):
+        """
+        @brief Handles the GetLog request from the central system.
+
+        This method is triggered when a GetLog request is received from the central system.
+        It processes the request to retrieve logs using the charge point response handler.
+
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetLog: The response to the GetLog request, including the status of the log retrieval process.
+
+        @details
+        The method invokes the charge point response handler to process the GetLog request
+        with any additional keyword arguments. It then returns a GetLog response with the 
+        status of the log retrieval process.
+
+        Example usage:
+        @code
+        charge_point.on_get_log()
+        @endcode
+        """
+        status_value=charge_point_responce_handler.get_log(**kwargs)
         return ocpp_response.GetLog(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetMonitoringReport")
     def on_get_monitoring_report(self, request_id,**kwargs):
+        """
+        @brief Handles the GetMonitoringReport request from the central system.
+
+        This method is triggered when a GetMonitoringReport request is received from the central system.
+        It processes the request to retrieve a monitoring report using the charge point response handler.
+
+        @param request_id: The ID of the monitoring report request.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetMonitoringReport: The response to the GetMonitoringReport request.
+
+        @details
+        The method invokes the charge point response handler to process the GetMonitoringReport request
+        with the provided request ID and any additional keyword arguments. It then returns a GetMonitoringReport
+        response with the status of the monitoring report retrieval process.
+
+        Example usage:
+        @code
+        charge_point.on_get_monitoring_report(request_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.get_monitoring_report( request_id,**kwargs)
         return ocpp_response.GetMonitoringReport(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetReport")
     def on_get_report(self,request_id,**kwargs):
+        """
+        @brief Handles the GetReport request from the central system.
+
+        This method is triggered when a GetReport request is received from the central system.
+        It processes the request to retrieve a report using the charge point response handler.
+
+        @param request_id: The ID of the report request.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetReport: The response to the GetReport request.
+
+        @details
+        The method invokes the charge point response handler to process the GetReport request
+        with the provided request ID and any additional keyword arguments. It then returns a GetReport
+        response with the status of the report retrieval process.
+
+        Example usage:
+        @code
+        charge_point.on_get_report(request_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.get_report( request_id,**kwargs)
         return ocpp_response.GetReport(
-            status="Accepted"
+            status=status_value
         )
 
     @on("GetTransactionStatus")
     def on_get_transaction_status(self,**kwargs):
+        """
+        @brief Handles the GetTransactionStatus request from the central system.
+
+        This method is triggered when a GetTransactionStatus request is received from the central system.
+        It processes the request to retrieve transaction status information using the charge point response handler.
+
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetTransactionStatus: The response to the GetTransactionStatus request.
+
+        @details
+        The method invokes the charge point response handler to process the GetTransactionStatus request
+        with any additional keyword arguments. It then returns a GetTransactionStatus response with the
+        transaction status information.
+
+        Example usage:
+        @code
+        charge_point.on_get_transaction_status()
+        @endcode
+        """
+        messages_in_queue_value=charge_point_responce_handler.get_transaction_status(**kwargs)
         return ocpp_response.GetTransactionStatus(
-            messages_in_queue=True
+            messages_in_queue=messages_in_queue_value
         )
 
     @on("GetVariables")
     def on_get_variables(self, get_variable_data, **kwargs):
+        """
+        @brief Handles the GetVariables request from the central system.
+
+        This method is triggered when a GetVariables request is received from the central system.
+        It processes the request to retrieve variables using the charge point response handler.
+
+        @param get_variable_data: The data specifying which variables to retrieve.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.GetVariables: The response to the GetVariables request.
+
+        @details
+        The method invokes the charge point response handler to process the GetVariables request
+        with the specified get_variable_data and any additional keyword arguments. It then returns a GetVariables
+        response with the result of the variable retrieval process.
+
+        Example usage:
+        @code
+        charge_point.on_get_variables(get_variable_data)
+        @endcode
+        """
+        get_variable_result_value=charge_point_responce_handler.get_variables(get_variable_data,**kwargs)
         return ocpp_response.GetVariables(
-            
-            get_variable_result=[
-                {
-                    "attributeStatus": "Accepted",
-                    "component": {"name": "EVSE"},
-                    "variable": {"name": "VariableName"}
-                }
-            ]
+            get_variable_result=get_variable_result_value
         )
 
     @on("InstallCertificate")
     def on_install_certificate(self, certificate,certificate_type, **kwargs):
+        """
+        @brief Handles the InstallCertificate request from the central system.
+
+        This method is triggered when an InstallCertificate request is received from the central system.
+        It processes the request to install a certificate using the charge point response handler.
+
+        @param certificate: The certificate data to be installed.
+        @param certificate_type: The type of certificate being installed.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.InstallCertificate: The response to the InstallCertificate request.
+
+        @details
+        The method invokes the charge point response handler to process the InstallCertificate request
+        with the provided certificate, certificate_type, and any additional keyword arguments. It then returns
+        an InstallCertificate response with the status of the certificate installation process.
+
+        Example usage:
+        @code
+        charge_point.on_install_certificate(certificate, certificate_type)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.install_certificate(certificate,certificate_type, **kwargs)
         return ocpp_response.InstallCertificate(
-            status="Accepted"
+            status=status_value
         )
 
     @on("PublishFirmware")
     def on_publish_firmware(self, location,checksum,request_id, **kwargs):
+        """
+        @brief Handles the PublishFirmware request from the central system.
+
+        This method is triggered when a PublishFirmware request is received from the central system.
+        It processes the request to publish firmware using the charge point response handler.
+
+        @param location: The location URI of the firmware package to be published.
+        @param checksum: The checksum of the firmware package.
+        @param request_id: The ID of the firmware publication request.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.PublishFirmware: The response to the PublishFirmware request.
+
+        @details
+        The method invokes the charge point response handler to process the PublishFirmware request
+        with the provided location URI, checksum, request ID, and any additional keyword arguments. It then returns
+        a PublishFirmware response with the status of the firmware publication process.
+
+        Example usage:
+        @code
+        charge_point.on_publish_firmware(location, checksum, request_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.publish_firmware(location,checksum,request_id, **kwargs)
         return ocpp_response.PublishFirmware(
-            status="Accepted"
+            status=status_value
         )
 
     @on("RequestStartTransaction")
     def on_request_start_transaction(self, id_token,remote_start_id, **kwargs):
+        """
+        @brief Handles the RequestStartTransaction request from the central system.
+
+        This method is triggered when a RequestStartTransaction request is received from the central system.
+        It processes the request to start a transaction using the charge point response handler.
+
+        @param id_token: The identifier token for authentication or authorization.
+        @param remote_start_id: The ID provided by the central system for remote start.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.RequestStartTransaction: The response to the RequestStartTransaction request.
+
+        @details
+        The method invokes the charge point response handler to process the RequestStartTransaction request
+        with the provided ID token, remote start ID, and any additional keyword arguments. It then returns
+        a RequestStartTransaction response with the status of the transaction start process.
+
+        Example usage:
+        @code
+        charge_point.on_request_start_transaction(id_token, remote_start_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.request_start_transaction(id_token,remote_start_id, **kwargs)
         return ocpp_response.RequestStartTransaction(
-            status="Accepted"
+            status=status_value
         )
 
     @on("RequestStopTransaction")
     def on_request_stop_transaction(self, transaction_id,**kwargs):
+        """
+        @brief Handles the RequestStopTransaction request from the central system.
+
+        This method is triggered when a RequestStopTransaction request is received from the central system.
+        It processes the request to stop a transaction using the charge point response handler.
+
+        @param transaction_id: The ID of the transaction to be stopped.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.RequestStopTransaction: The response to the RequestStopTransaction request.
+
+        @details
+        The method invokes the charge point response handler to process the RequestStopTransaction request
+        with the provided transaction ID and any additional keyword arguments. It then returns
+        a RequestStopTransaction response with the status of the transaction stop process.
+
+        Example usage:
+        @code
+        charge_point.on_request_stop_transaction(transaction_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.request_stop_transaction(transaction_id,**kwargs)
         return ocpp_response.RequestStopTransaction(
-            status="Accepted"
+            status=status_value
         )
 
     @on("ReserveNow")
     def on_reserve_now(self, id,expiry_date_time,id_token,**kwargs):
+        """
+        @brief Handles the ReserveNow request from the central system.
+
+        This method is triggered when a ReserveNow request is received from the central system.
+        It processes the request to reserve a charging station using the charge point response handler.
+
+        @param id: The reservation ID.
+        @param expiry_date_time: The date and time when the reservation expires.
+        @param id_token: The identifier token for authentication or authorization.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.ReserveNow: The response to the ReserveNow request.
+
+        @details
+        The method invokes the charge point response handler to process the ReserveNow request
+        with the provided reservation ID, expiry date and time, ID token, and any additional keyword arguments.
+        It then returns a ReserveNow response with the status of the reservation process.
+
+        Example usage:
+        @code
+        charge_point.on_reserve_now(id, expiry_date_time, id_token)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.reserve_now(id,expiry_date_time,id_token,**kwargs)
         return ocpp_response.ReserveNow(
-            status="Accepted"
+            status=status_value
         )
 
     @on("Reset")
     def on_reset_request(self,type,**kwargs):
+        """
+        @brief Handles the Reset request from the central system.
+
+        This method is triggered when a Reset request is received from the central system.
+        It processes the request to reset the charge point using the charge point response handler.
+
+        @param type: The type of reset requested (e.g., Soft, Hard).
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.Reset: The response to the Reset request.
+
+        @details
+        The method invokes the charge point response handler to process the Reset request
+        with the provided reset type and any additional keyword arguments.
+        It then returns a Reset response with the status of the reset process.
+
+        Example usage:
+        @code
+        charge_point.on_reset_request(type)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.reset_request(type,**kwargs)
         return ocpp_response.Reset(
-            status="Accepted"
+            status=status_value
         )    
 
     @on("SendLocalList")
     def on_send_local_list(self,version_number,update_type,**kwargs):
+        status_value=charge_point_responce_handler.send_local_list(version_number,update_type,**kwargs)
         return ocpp_response.SendLocalList(
-            status="Accepted"
+            status=status_value
         )
 
     @on("SetChargingProfile")
-    def on_send_set_charging_profile(self,evse_id,charging_profile,**kwargs):
+    def on_set_charging_profile(self,evse_id,charging_profile,**kwargs):
+        """
+        @brief Handles the SendLocalList request from the central system.
+
+        This method is triggered when a SendLocalList request is received from the central system.
+        It processes the request to send a local authorization list using the charge point response handler.
+
+        @param version_number: The version number of the local authorization list.
+        @param update_type: The type of update requested for the local authorization list.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.SendLocalList: The response to the SendLocalList request.
+
+        @details
+        The method invokes the charge point response handler to process the SendLocalList request
+        with the provided version number, update type, and any additional keyword arguments.
+        It then returns a SendLocalList response with the status of the local list sending process.
+
+        Example usage:
+        @code
+        charge_point.on_send_local_list(version_number, update_type)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.set_charging_profile(evse_id,charging_profile,**kwargs)
         return ocpp_response.SetChargingProfile(
-            status="Accepted"
+            status=status_value
         )
 
     @on("SetDisplayMessage")
-    def on_send_set_display_message(self,message,**kwargs):
+    def on_set_display_message(self,message,**kwargs):
+        status_value=charge_point_responce_handler.set_display_message(message,**kwargs)
         return ocpp_response.SetDisplayMessage(
-            status="Accepted"
+            status=status_value
         )
 
     @on("SetMonitoringBase")
     def on_set_monitoring_base(self,monitoring_base ,**kwargs):
+        """
+        @brief Handles the SetDisplayMessage request from the central system.
+
+        This method is triggered when a SetDisplayMessage request is received from the central system.
+        It processes the request to set a display message using the charge point response handler.
+
+        @param message: The message to be displayed on the charge point.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.SetDisplayMessage: The response to the SetDisplayMessage request.
+
+        @details
+        The method invokes the charge point response handler to process the SetDisplayMessage request
+        with the provided message and any additional keyword arguments.
+        It then returns a SetDisplayMessage response with the status of the display message setting process.
+
+        Example usage:
+        @code
+        charge_point.on_set_display_message(message)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.set_monitoring_base(monitoring_base ,**kwargs)
         return ocpp_response.SetMonitoringBase(
-            status="Accepted"
+            status=status_value
         )
         
     @on("SetMonitoringLevel")
     def on_set_monitoring_level(self,severity,**kwargs):
+        """
+        @brief Handles the SetMonitoringLevel request from the central system.
+
+        This method is triggered when a SetMonitoringLevel request is received from the central system.
+        It processes the request to set the monitoring level using the charge point response handler.
+
+        @param severity: The severity level for monitoring (e.g., Debug, Information).
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.SetMonitoringLevel: The response to the SetMonitoringLevel request.
+
+        @details
+        The method invokes the charge point response handler to process the SetMonitoringLevel request
+        with the provided severity level and any additional keyword arguments.
+        It then returns a SetMonitoringLevel response with the status of the monitoring level setting process.
+
+        Example usage:
+        @code
+        charge_point.on_set_monitoring_level(severity)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.set_monitoring_level(severity,**kwargs)
         return ocpp_response.SetMonitoringLevel(
-            status="Accepted"
+            status=status_value
         )
 
     @on("SetNetworkProfile")
     def on_set_network_profile(self,configuration_slot,connection_data,**kwargs):
+        """
+        @brief Handles the SetNetworkProfile request from the central system.
+
+        This method is triggered when a SetNetworkProfile request is received from the central system.
+        It processes the request to set a network profile using the charge point response handler.
+
+        @param configuration_slot: The slot number for the network configuration.
+        @param connection_data: The data for establishing the network connection.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.SetNetworkProfile: The response to the SetNetworkProfile request.
+
+        @details
+        The method invokes the charge point response handler to process the SetNetworkProfile request
+        with the provided configuration slot, connection data, and any additional keyword arguments.
+        It then returns a SetNetworkProfile response with the status of the network profile setting process.
+
+        Example usage:
+        @code
+        charge_point.on_set_network_profile(configuration_slot, connection_data)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.set_network_profile(configuration_slot,connection_data,**kwargs)
         return ocpp_response.SetNetworkProfile(
-            status="Accepted"
+            status=status_value
         )
 
     @on("SetVariableMonitoring")
     def on_set_variable_monitoring(self, set_monitoring_data, **kwargs):
+        """
+        @brief Handles the SetVariableMonitoring request from the central system.
+
+        This method is triggered when a SetVariableMonitoring request is received from the central system.
+        It processes the request to set variable monitoring using the charge point response handler.
+
+        @param set_monitoring_data: Data specifying the variables to monitor.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.SetVariableMonitoring: The response to the SetVariableMonitoring request.
+
+        @details
+        The method invokes the charge point response handler to process the SetVariableMonitoring request
+        with the provided monitoring data and any additional keyword arguments.
+        It then returns a SetVariableMonitoring response with the status of the variable monitoring setting process.
+
+        Example usage:
+        @code
+        charge_point.on_set_variable_monitoring(set_monitoring_data)
+        @endcode
+        """
+        set_monitoring_result_value=charge_point_responce_handler.set_variable_monitoring(set_monitoring_data, **kwargs)
         return ocpp_response.SetVariableMonitoring(
-            
-            set_monitoring_result=[
-                {
-                "status":"Accepted",
-                "type": "UpperThreshold",
-                "severity": 9,
-                "component": {"name": "ChargingStation"},
-                "variable": {"name": "VariableName"}
-                }
-            ]
+            set_monitoring_result=set_monitoring_result_value
         )
 
     @on("SetVariables")
     def on_set_variables(self, set_variable_data, **kwargs):
-        set_variable_results = []
-        for variable in set_variable_data:
-            # Process each variable and determine the result status
-            result_status = "Accepted"  # This should be determined based on your logic
-            set_variable_results.append({
-                "attributeStatus": result_status,
-                "component": variable["component"],
-                "variable": variable["variable"]
-            })
+        """
+        @brief Handles the SetVariables request from the central system.
+
+        This method is triggered when a SetVariables request is received from the central system.
+        It processes the request to set variables using the charge point response handler.
+
+        @param set_variable_data: Data specifying the variables to set.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.SetVariables: The response to the SetVariables request.
+
+        @details
+        The method invokes the charge point response handler to process the SetVariables request
+        with the provided variable setting data and any additional keyword arguments.
+        It then returns a SetVariables response with the status of the variable setting process.
+
+        Example usage:
+        @code
+        charge_point.on_set_variables(set_variable_data)
+        @endcode
+        """
+        set_variable_results=charge_point_responce_handler.set_variables(set_variable_data,**kwargs)
         return ocpp_response.SetVariables(
             set_variable_result=set_variable_results
         )
 
     @on("TriggerMessage")
     def on_trigger_message(self,requested_message, **kwargs):
+        """
+        @brief Handles the TriggerMessage request from the central system.
+
+        This method is triggered when a TriggerMessage request is received from the central system.
+        It processes the request to trigger a message using the charge point response handler.
+
+        @param requested_message: The message to be triggered.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.TriggerMessage: The response to the TriggerMessage request.
+
+        @details
+        The method invokes the charge point response handler to process the TriggerMessage request
+        with the provided message and any additional keyword arguments.
+        It then returns a TriggerMessage response with the status of the message triggering process.
+
+        Example usage:
+        @code
+        charge_point.on_trigger_message(requested_message)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.trigger_message(requested_message,**kwargs)
         return ocpp_response.TriggerMessage(
-            status="Accepted"
+            status=status_value
         )
 
     @on("UnlockConnector")
     def on_unlock_connector(self,evse_id,connector_id,**kwargs):
+        """
+        @brief Handles the UnlockConnector request from the central system.
+
+        This method is triggered when an UnlockConnector request is received from the central system.
+        It processes the request to unlock a connector using the charge point response handler.
+
+        @param evse_id: Identifier of the Electric Vehicle Supply Equipment (EVSE) where the connector is located.
+        @param connector_id: Identifier of the connector to unlock.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.UnlockConnector: The response to the UnlockConnector request.
+
+        @details
+        The method invokes the charge point response handler to process the UnlockConnector request
+        with the provided EVSE ID, connector ID, and any additional keyword arguments.
+        It then returns an UnlockConnector response with the status of the connector unlocking process.
+
+        Example usage:
+        @code
+        charge_point.on_unlock_connector(evse_id, connector_id)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.unlock_connector(evse_id,connector_id,**kwargs)
         return ocpp_response.UnlockConnector(
-            status="Unlocked"
+            status=status_value
         )
 
     @on("UnpublishFirmware")
     def on_unpublish_firmware(self,checksum, **kwargs):
+        """
+        @brief Handles the UnpublishFirmware request from the central system.
+
+        This method is triggered when an UnpublishFirmware request is received from the central system.
+        It processes the request to unpublish firmware using the charge point response handler.
+
+        @param checksum: The checksum of the firmware to be unpublished.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.UnpublishFirmware: The response to the UnpublishFirmware request.
+
+        @details
+        The method invokes the charge point response handler to process the UnpublishFirmware request
+        with the provided firmware checksum and any additional keyword arguments.
+        It then returns an UnpublishFirmware response with the status of the firmware unpublishing process.
+
+        Example usage:
+        @code
+        charge_point.on_unpublish_firmware(checksum)
+        @endcode
+        """
+        status_value=charge_point_responce_handler.unpublish_firmware(checksum, **kwargs)
         return ocpp_response.UnpublishFirmware(
-            status="DownloadOngoing"
+            status=status_value
         )
 
     @on("UpdateFirmware")
     def on_update_firmware(self,request_id,firmware,retries,**kwargs):
+        """
+        @brief Handles the UpdateFirmware request from the central system.
+
+        This method is triggered when an UpdateFirmware request is received from the central system.
+        It processes the request to update firmware using the charge point response handler.
+
+        @param request_id: Identifier of the firmware update request.
+        @param firmware: Details of the firmware to be updated, such as location.
+        @param retries: Number of retry attempts allowed for the firmware update.
+        @param kwargs: Additional keyword arguments.
+        @return ocpp_response.UpdateFirmware: The response to the UpdateFirmware request.
+
+        @details
+        The method invokes the charge point response handler to process the UpdateFirmware request
+        with the provided request ID, firmware details, retries, and any additional keyword arguments.
+        It then returns an UpdateFirmware response with the status of the firmware update process.
+
+        Example usage:
+        @code
+        charge_point.on_update_firmware(request_id, firmware, retries)
+        @endcode
+        """
         # print("Firmware update request received. Download from:",firmware("location"))
         # Here you would add the logic to download and apply the firmware
+        status_value=charge_point_responce_handler.update_firmware(request_id,firmware,retries,**kwargs)
         return ocpp_response.UpdateFirmware(
-            status="Accepted"
+            status=status_value
         )
 
 # async def api_handle(charge_point):
